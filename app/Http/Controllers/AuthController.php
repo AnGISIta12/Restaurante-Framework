@@ -32,7 +32,7 @@ class AuthController extends Controller
         if (Session::has('usuario_id')) {
             return redirect()->route('dashboard');
         }
-        return view('auth.login');
+        return view('login');
     }
 
     /**
@@ -45,7 +45,7 @@ class AuthController extends Controller
             return redirect()->route('dashboard');
         }
         $roles = Rol::orderBy('nombre')->get();
-        return view('auth.registro', compact('roles'));
+        return view('registro', compact('roles'));
     }
 
     /*------------------------------------------------------------------
