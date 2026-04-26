@@ -5,12 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-/**
- * @brief Modelo de rol del sistema.
- *
- * Mapea la tabla 'roles'.
- * Roles posibles: Administrador, Maitre, Mesero, Cocinero, Cliente.
- */
 class Rol extends Model
 {
     protected $table      = 'roles';
@@ -19,14 +13,6 @@ class Rol extends Model
 
     protected $fillable = ['nombre'];
 
-    /*------------------------------------------------------------------
-     | Relaciones
-     ------------------------------------------------------------------*/
-
-    /**
-     * @brief Usuarios que tienen este rol (many-to-many via actuaciones).
-     * @return BelongsToMany
-     */
     public function usuarios(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -37,9 +23,6 @@ class Rol extends Model
         );
     }
 
-    /*------------------------------------------------------------------
-     | Constantes de roles para evitar strings sueltos en el código
-     ------------------------------------------------------------------*/
     const ADMINISTRADOR = 'Administrador';
     const MAITRE        = 'Maitre';
     const MESERO        = 'Mesero';
