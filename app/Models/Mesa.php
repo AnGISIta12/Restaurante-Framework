@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Mesa extends Model
 {
     protected $table      = 'mesas';
-    protected $primaryKey = 'id_mesa';
+    protected $primaryKey = 'id';
     public    $timestamps = false;
 
     protected $fillable = ['sillas'];
@@ -34,7 +34,7 @@ class Mesa extends Model
      */
     public function horarios(): HasMany
     {
-        return $this->hasMany(Horario::class, 'mesa_id', 'id_mesa');
+        return $this->hasMany(Horario::class, 'mesa_id', 'id');
     }
 
     /*------------------------------------------------------------------
@@ -48,7 +48,7 @@ class Mesa extends Model
      */
     public function scopeDisponibles($query)
     {
-        return $query->whereNotIn('id_mesa', function ($sub) {
+        return $query->whereNotIn('id', function ($sub) {
             $sub->select('mesa_id')
                 ->from('horarios')
                 ->whereRaw("inicio BETWEEN NOW() - INTERVAL '2 hours' AND NOW() + INTERVAL '2 hours'");

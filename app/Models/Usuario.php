@@ -26,7 +26,7 @@ class Usuario extends Authenticatable
      | Configuración de tabla
      ------------------------------------------------------------------*/
     protected $table      = 'usuarios';
-    protected $primaryKey = 'id_usuario';
+    protected $primaryKey = 'id';
     public    $timestamps = false;          // la tabla no tiene created_at/updated_at
 
     /**
@@ -54,7 +54,7 @@ class Usuario extends Authenticatable
      */
     public function getAuthIdentifierName(): string
     {
-        return 'id_usuario';
+        return 'id';
     }
 
     /**
@@ -108,7 +108,7 @@ class Usuario extends Authenticatable
      */
     public function reservaciones(): HasMany
     {
-        return $this->hasMany(Reservacion::class, 'cliente_id', 'id_usuario');
+        return $this->hasMany(Reservacion::class, 'cliente_id', 'id');
     }
 
     /*------------------------------------------------------------------
