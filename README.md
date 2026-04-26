@@ -100,7 +100,7 @@ resources/views/
 ├── menu/
 ├── pedidos/
 └── reportes/
-
+```
 # Modelos Eloquent — Restaurante Framework (Laravel)
 
 ## Modelos generados
