@@ -9,14 +9,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Usuario extends Authenticatable
 {
     protected $table      = 'usuarios';
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'id_usuario';
     public    $timestamps = false;
 
     protected $fillable = ['nombre', 'clave', 'fecha_clave'];
 
     protected $hidden = ['clave'];
 
-    public function getAuthIdentifierName(): string { return 'id'; }
+    public function getAuthIdentifierName(): string { return 'id_usuario'; }
     public function getAuthPassword(): string { return $this->clave; }
 
     public function roles(): BelongsToMany

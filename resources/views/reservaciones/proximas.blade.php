@@ -25,7 +25,7 @@
                     @forelse($reservaciones as $reservacion)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">
-                                {{ $reservacion->cliente_nombre ?? $reservacion->nombre_cliente ?? 'Cliente sin nombre' }}
+                                {{ $reservacion->cliente->nombre ?? 'Cliente sin nombre' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                 {{ $reservacion->fecha }}
@@ -38,15 +38,19 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <div class="flex items-center gap-2">
-                                    <a href="#" class="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700">
+                                    <a href="{{ url('reservaciones/' . $reservacion->id_reservacion) }}" class="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700">
                                         Ver
                                     </a>
-                                    <a href="#" class="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-amber-500 text-white hover:bg-amber-600">
+                                    <a href="{{ url('reservaciones/' . $reservacion->id_reservacion . '/edit') }}" class="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-amber-500 text-white hover:bg-amber-600">
                                         Editar
                                     </a>
-                                    <button type="button" class="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-red-600 text-white hover:bg-red-700">
-                                        Cancelar
-                                    </button>
+                                    <form action="{{ url('reservaciones/' . $reservacion->id_reservacion) }}" method="POST" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-red-600 text-white hover:bg-red-700">
+                                            Cancelar
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

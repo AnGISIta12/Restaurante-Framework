@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Reservacion extends Model
 {
     protected $table      = 'reservaciones';
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'id_reservacion';
     public    $timestamps = false;
 
     protected $fillable = ['cliente_id', 'user_id', 'mesa_id', 'fecha', 'hora', 'cantidad_personas', 'cantidad', 'estado'];
@@ -22,7 +22,7 @@ class Reservacion extends Model
 
     public function cliente(): BelongsTo
     {
-        return $this->belongsTo(Usuario::class, 'cliente_id', 'id');
+        return $this->belongsTo(Usuario::class, 'cliente_id', 'id_usuario');
     }
 
     public function user(): BelongsTo

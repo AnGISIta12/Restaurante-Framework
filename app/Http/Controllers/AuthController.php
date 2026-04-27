@@ -36,25 +36,21 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        // 🔥 FIX REAL (HEX en vez de binario)
-        $hashHex = hash('sha256', $request->password);
+        $usuario = \App\Models\User::where('name', $request->nombre)->first();
 
-        $usuario = Usuario::where('nombre', $request->nombre)
-            ->whereRaw("encode(clave, 'hex') = ?", [$hashHex])
-            ->first();
-
-        if (!$usuario) {
+        if (!$usuario || !\Illuminate\Support\Facades\Hash::check($request->password, $usuario->password)) {
             return back()
                 ->withInput(['nombre' => $request->nombre])
                 ->withErrors(['auth' => 'Usuario o contraseña incorrectos.']);
         }
 
         // Obtener rol
-        $rol = $usuario->roles()->value('nombre') ?? 'Cliente';
+        $rolModel = Rol::find($usuario->rol_id);
+        $rol = $rolModel ? $rolModel->nombre : 'Cliente';
 
         // Guardar sesión
         Session::put('usuario_id',     $usuario->id);
-        Session::put('usuario_nombre', $usuario->nombre);
+        Session::put('usuario_nombre', $usuario->name);
         Session::put('rol',            ucfirst($rol));
 
         // 👇 PRUEBA
@@ -69,23 +65,18 @@ class AuthController extends Controller
             'rol_id'   => ['required', 'exists:roles,id'],
         ]);
 
-        if (Usuario::where('nombre', $request->nombre)->exists()) {
+        if (\App\Models\User::where('name', $request->nombre)->exists()) {
             return back()
                 ->withInput()
                 ->withErrors(['nombre' => 'Ese nombre ya existe.']);
         }
 
         DB::transaction(function () use ($request) {
-            $resultado = DB::selectOne(
-                "INSERT INTO usuarios (nombre, clave, fecha_clave)
-                 VALUES (?, sha256((?::text)::bytea), NOW())
-                 RETURNING id",
-                [$request->nombre, $request->password]
-            );
-
-            DB::table('actuaciones')->insert([
-                'rol_id'     => $request->rol_id,
-                'usuario_id' => $resultado->id,
+            \App\Models\User::create([
+                'name'     => $request->nombre,
+                'email'    => uniqid() . '@restaurante.com', // generamos un correo por defecto
+                'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+                'rol_id'   => $request->rol_id,
             ]);
         });
 
