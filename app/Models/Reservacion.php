@@ -12,9 +12,9 @@ class Reservacion extends Model
     protected $primaryKey = 'id';
     public    $timestamps = false;
 
-    protected $fillable = ['cliente_id', 'cantidad', 'estado'];
+    protected $fillable = ['cliente_id', 'user_id', 'mesa_id', 'fecha', 'hora', 'cantidad_personas', 'cantidad', 'estado'];
 
-    protected $casts = ['cantidad' => 'integer', 'estado' => 'integer'];
+    protected $casts = ['cantidad' => 'integer', 'cantidad_personas' => 'integer', 'estado' => 'integer'];
 
     const ESTADO_PENDIENTE  = 0;
     const ESTADO_CONFIRMADA = 1;
@@ -25,21 +25,20 @@ class Reservacion extends Model
         return $this->belongsTo(Usuario::class, 'cliente_id', 'id');
     }
 
-    public function horario(): HasOne
+    public function user(): BelongsTo
     {
-        return $this->hasOne(Horario::class, 'reservacion_id', 'id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    public function mesa(): BelongsTo
+    {
+        return $this->belongsTo(Mesa::class, 'mesa_id', 'id');
     }
 
     public function scopeSinAsignar($query)
     {
-        return $query->whereIn('estado', [self::ESTADO_PENDIENTE, self::ESTADO_CONFIRMADA]);
-    }
-
-    public function scopeProximas($query)
-    {
-        return $query->whereHas('horario', function ($q) {
-            $q->where('inicio', '>=', now());
-        });
+        return $query->whereIn('estado', [self::ESTADO_PENDIENTE, self::ESTADO_CONFIRMADA])
+                     ->whereNull('mesa_id');
     }
 
     public function getEtiquetaEstado(): string

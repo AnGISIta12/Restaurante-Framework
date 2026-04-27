@@ -11,21 +11,22 @@ class Mesa extends Model
     protected $primaryKey = 'id';
     public    $timestamps = false;
 
-    protected $fillable = ['sillas'];
+    protected $fillable = ['sillas', 'estado', 'capacidad'];
 
-    protected $casts = ['sillas' => 'integer'];
+    protected $casts = ['sillas' => 'integer', 'capacidad' => 'integer'];
 
-    public function horarios(): HasMany
+    public function reservaciones(): HasMany
     {
-        return $this->hasMany(Horario::class, 'mesa_id', 'id');
+        return $this->hasMany(Reservacion::class, 'mesa_id', 'id');
     }
 
     public function scopeDisponibles($query)
     {
         return $query->whereNotIn('id', function ($sub) {
             $sub->select('mesa_id')
-                ->from('horarios')
-                ->whereRaw("inicio BETWEEN NOW() - INTERVAL '2 hours' AND NOW() + INTERVAL '2 hours'");
+                ->from('reservaciones')
+                ->whereNotNull('mesa_id')
+                ->whereRaw("CAST(fecha || ' ' || hora AS TIMESTAMP) BETWEEN NOW() - INTERVAL '2 hours' AND NOW() + INTERVAL '2 hours'");
         });
     }
 

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Horario;
 use App\Models\Mesa;
 use App\Models\Reservacion;
 use App\Models\Rol;
@@ -121,10 +120,10 @@ class ReservacionController extends Controller
         $cupoTotal   = Mesa::capacidadTotal();
 
         // Asientos ya ocupados en la ventana actual de 2 horas
-        $ocupados = (int) DB::table('horarios')
-            ->join('reservaciones', 'horarios.reservacion_id', '=', 'reservaciones.id')
-            ->whereRaw("horarios.inicio BETWEEN NOW() - INTERVAL '2 hours' AND NOW() + INTERVAL '2 hours'")
-            ->sum('reservaciones.cantidad');
+        $ocupados = (int) DB::table('reservaciones')
+            ->whereNotNull('mesa_id')
+            ->whereRaw("CAST(fecha || ' ' || hora AS TIMESTAMP) BETWEEN NOW() - INTERVAL '2 hours' AND NOW() + INTERVAL '2 hours'")
+            ->sum('cantidad');
 
         if (($ocupados + $reservacion->cantidad) > $cupoTotal) {
             return redirect()->route('reservaciones.asignar')
@@ -133,16 +132,14 @@ class ReservacionController extends Controller
                 ]);
         }
 
-        DB::transaction(function () use ($request, $reservacion) {
-            Horario::create([
-                'mesa_id'        => $request->mesa_id,
-                'reservacion_id' => $reservacion->id,
-                'inicio'         => now(),
-                'duracion'       => '01:30:00',
-            ]);
-
-            $reservacion->update(['estado' => Reservacion::ESTADO_ASIGNADA]);
-        });
+        $reservacion->update([
+            'estado' => Reservacion::ESTADO_ASIGNADA,
+            'mesa_id' => $request->mesa_id,
+            // Si la reservacion aún no tenía fecha/hora, tendrías que definirla. 
+            // Supondremos que ya la tiene o la guardamos con now() si era la logica anterior
+            'fecha' => $reservacion->fecha ?? now()->toDateString(),
+            'hora'  => $reservacion->hora ?? now()->toTimeString(),
+        ]);
 
         return redirect()->route('reservaciones.asignar')
             ->with('success', 'Mesa asignada correctamente.');
@@ -161,9 +158,9 @@ class ReservacionController extends Controller
     {
         $fecha = $request->get('fecha', now()->toDateString());
 
-        $mesas = Mesa::with(['horarios' => function ($q) use ($fecha) {
-            $q->whereRaw("DATE(inicio) = ?", [$fecha])
-              ->with('reservacion.cliente');
+        $mesas = Mesa::with(['reservaciones' => function ($q) use ($fecha) {
+            $q->whereDate('fecha', $fecha)
+              ->with('cliente');
         }])->orderBy('id')->get();
 
         return view('reservaciones.verificar', compact('mesas', 'fecha'));
@@ -181,13 +178,19 @@ class ReservacionController extends Controller
     {
         $cupoTotal  = Mesa::capacidadTotal();
         $numMesas   = Mesa::count();
-        $ocupadas   = (int) Horario::hoy()->distinct('mesa_id')->count('mesa_id');
+        // Mesas ocupadas hoy
+        $ocupadas   = (int) Reservacion::whereDate('fecha', now()->toDateString())
+            ->whereNotNull('mesa_id')
+            ->distinct('mesa_id')
+            ->count('mesa_id');
+            
         $libres     = $numMesas - $ocupadas;
         $porcentaje = $numMesas > 0 ? round($ocupadas / $numMesas * 100) : 0;
 
-        $reservasHoy = Horario::hoy()
-            ->with('mesa', 'reservacion.cliente')
-            ->orderBy('inicio')
+        $reservasHoy = Reservacion::whereDate('fecha', now()->toDateString())
+            ->whereNotNull('mesa_id')
+            ->with(['mesa', 'cliente'])
+            ->orderBy('hora')
             ->get();
 
         return view('reservaciones.cupo', compact(
@@ -205,21 +208,27 @@ class ReservacionController extends Controller
      */
     public function proximas(): View
     {
-        $reservaciones = Reservacion::with(['cliente', 'horario.mesa'])
+        $reservaciones = Reservacion::with(['cliente', 'mesa'])
             ->where(function ($q) {
-                $q->whereHas('horario', fn($h) => $h->where('inicio', '>=', now()))
+                $q->whereDate('fecha', '>', now()->toDateString())
+                  ->orWhere(function ($sq) {
+                      $sq->whereDate('fecha', '=', now()->toDateString())
+                         ->whereTime('hora', '>=', now()->toTimeString());
+                  })
                   ->orWhereIn('estado', [
                       Reservacion::ESTADO_PENDIENTE,
                       Reservacion::ESTADO_CONFIRMADA,
                   ]);
             })
-            ->orderByRaw("(SELECT inicio FROM horarios WHERE reservacion_id = reservaciones.id LIMIT 1) ASC NULLS LAST")
+            ->orderByRaw("fecha ASC NULLS LAST, hora ASC NULLS LAST")
             ->limit(30)
             ->get();
 
         // Notificación: reservaciones que empiezan en los próximos 30 minutos
-        $porEmpezar = Horario::proximos(30)
-            ->with('reservacion.cliente', 'mesa')
+        $porEmpezar = Reservacion::whereDate('fecha', now()->toDateString())
+            ->whereTime('hora', '>=', now()->toTimeString())
+            ->whereTime('hora', '<=', now()->addMinutes(30)->toTimeString())
+            ->with(['cliente', 'mesa'])
             ->get();
 
         return view('reservaciones.proximas', compact('reservaciones', 'porEmpezar'));
@@ -271,9 +280,10 @@ class ReservacionController extends Controller
      */
     public function historialCliente(): View
     {
-        $reservaciones = Reservacion::with(['horario.mesa'])
+        $reservaciones = Reservacion::with(['mesa'])
             ->where('cliente_id', session('usuario_id'))
-            ->orderByRaw("(SELECT inicio FROM horarios WHERE reservacion_id = reservaciones.id LIMIT 1) DESC NULLS LAST")
+            ->orderBy('fecha', 'desc')
+            ->orderBy('hora', 'desc')
             ->get();
 
         return view('reservaciones.historial-cliente', compact('reservaciones'));
@@ -289,8 +299,9 @@ class ReservacionController extends Controller
      */
     public function reporte(): View
     {
-        $reservaciones = Reservacion::with(['cliente', 'horario.mesa'])
-            ->orderByRaw("(SELECT inicio FROM horarios WHERE reservacion_id = reservaciones.id LIMIT 1) DESC NULLS LAST")
+        $reservaciones = Reservacion::with(['cliente', 'mesa'])
+            ->orderBy('fecha', 'desc')
+            ->orderBy('hora', 'desc')
             ->get();
 
         return view('reportes.reservaciones', compact('reservaciones'));
