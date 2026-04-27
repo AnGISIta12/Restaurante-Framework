@@ -34,7 +34,7 @@ class EmpleadoController extends Controller
         $request->validate([
             'nombre'   => ['required', 'string', 'max:50'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
-            'rol_id'   => ['required', 'exists:roles,id_rol'],
+            'rol_id'   => ['required', 'exists:roles,id'],
         ], [
             'nombre.required'   => 'El nombre es obligatorio.',
             'password.min'      => 'La contraseña debe tener al menos 6 caracteres.',
@@ -51,13 +51,13 @@ class EmpleadoController extends Controller
             $resultado = DB::selectOne(
                 "INSERT INTO usuarios (nombre, clave, fecha_clave)
                  VALUES (?, sha256((?::text)::bytea), NOW())
-                 RETURNING id_usuario",
+                 RETURNING id",
                 [$request->nombre, $request->password]
             );
 
             DB::table('actuaciones')->insert([
                 'rol_id'     => $request->rol_id,
-                'usuario_id' => $resultado->id_usuario,
+                'usuario_id' => $resultado->id,
             ]);
         });
 
@@ -68,18 +68,18 @@ class EmpleadoController extends Controller
     public function edit(Usuario $usuario): View
     {
         $roles      = Rol::where('nombre', '!=', Rol::CLIENTE)->orderBy('nombre')->get();
-        $rolActual  = $usuario->roles()->value('id_rol');
+        $rolActual  = $usuario->roles()->value('id');
         return view('empleados.edit', compact('usuario', 'roles', 'rolActual'));
     }
 
     public function update(Request $request, Usuario $usuario): RedirectResponse
     {
         $request->validate([
-            'rol_id' => ['required', 'exists:roles,id_rol'],
+            'rol_id' => ['required', 'exists:roles,id'],
         ]);
 
         DB::table('actuaciones')
-            ->where('usuario_id', $usuario->id_usuario)
+            ->where('usuario_id', $usuario->id)
             ->update(['rol_id' => $request->rol_id]);
 
         return redirect()->route('empleados.index')
@@ -89,7 +89,7 @@ class EmpleadoController extends Controller
     public function destroy(Usuario $usuario): RedirectResponse
     {
         $nombre = $usuario->nombre;
-        DB::table('actuaciones')->where('usuario_id', $usuario->id_usuario)->delete();
+        DB::table('actuaciones')->where('usuario_id', $usuario->id)->delete();
         $usuario->delete();
 
         return redirect()->route('empleados.index')

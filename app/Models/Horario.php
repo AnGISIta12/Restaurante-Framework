@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Horario extends Model
 {
     protected $table      = 'horarios';
-    protected $primaryKey = 'id_horario';
+    protected $primaryKey = 'id';
     public    $timestamps = false;
 
     protected $fillable = ['mesa_id', 'reservacion_id', 'inicio', 'duracion'];
@@ -17,12 +17,12 @@ class Horario extends Model
 
     public function mesa(): BelongsTo
     {
-        return $this->belongsTo(Mesa::class, 'mesa_id', 'id_mesa');
+        return $this->belongsTo(Mesa::class, 'mesa_id', 'id');
     }
 
     public function reservacion(): BelongsTo
     {
-        return $this->belongsTo(Reservacion::class, 'reservacion_id', 'id_reservacion');
+        return $this->belongsTo(Reservacion::class, 'reservacion_id', 'id');
     }
 
     public function scopeActivos($query)

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Orden extends Model
 {
     protected $table      = 'ordenes';
-    protected $primaryKey = 'id_orden';
+    protected $primaryKey = 'id';
     public    $timestamps = false;
 
     protected $fillable = ['plato_id', 'pedido_id', 'estado', 'cantidad', 'solicitado'];
@@ -26,12 +26,12 @@ class Orden extends Model
 
     public function plato(): BelongsTo
     {
-        return $this->belongsTo(Plato::class, 'plato_id', 'id_plato');
+        return $this->belongsTo(Plato::class, 'plato_id', 'id');
     }
 
     public function pedido(): BelongsTo
     {
-        return $this->belongsTo(Pedido::class, 'pedido_id', 'id_pedido');
+        return $this->belongsTo(Pedido::class, 'pedido_id', 'id');
     }
 
     public function scopeEnCocina($query)

@@ -9,14 +9,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Usuario extends Authenticatable
 {
     protected $table      = 'usuarios';
-    protected $primaryKey = 'id_usuario';
+    protected $primaryKey = 'id';
     public    $timestamps = false;
 
     protected $fillable = ['nombre', 'clave', 'fecha_clave'];
 
     protected $hidden = ['clave'];
 
-    public function getAuthIdentifierName(): string { return 'id_usuario'; }
+    public function getAuthIdentifierName(): string { return 'id'; }
     public function getAuthPassword(): string { return $this->clave; }
 
     public function roles(): BelongsToMany
@@ -26,17 +26,17 @@ class Usuario extends Authenticatable
 
     public function pedidosComoCliente(): HasMany
     {
-        return $this->hasMany(Pedido::class, 'cliente_id', 'id_usuario');
+        return $this->hasMany(Pedido::class, 'cliente_id', 'id');
     }
 
     public function pedidosComoMesero(): HasMany
     {
-        return $this->hasMany(Pedido::class, 'mesero_id', 'id_usuario');
+        return $this->hasMany(Pedido::class, 'mesero_id', 'id');
     }
 
     public function reservaciones(): HasMany
     {
-        return $this->hasMany(Reservacion::class, 'cliente_id', 'id_usuario');
+        return $this->hasMany(Reservacion::class, 'cliente_id', 'id');
     }
 
     public function getRolNombre(): string

@@ -53,9 +53,9 @@ class AuthController extends Controller
         $rol = $usuario->roles()->value('nombre') ?? 'Cliente';
 
         // Guardar sesión
-        Session::put('usuario_id',     $usuario->id_usuario);
+        Session::put('usuario_id',     $usuario->id);
         Session::put('usuario_nombre', $usuario->nombre);
-        Session::put('rol',            $rol);
+        Session::put('rol',            ucfirst($rol));
 
         // 👇 PRUEBA
         return redirect()->route('dashboard');
@@ -66,7 +66,7 @@ class AuthController extends Controller
         $request->validate([
             'nombre'   => ['required', 'string', 'max:100'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
-            'rol_id'   => ['required', 'exists:roles,id_rol'],
+            'rol_id'   => ['required', 'exists:roles,id'],
         ]);
 
         if (Usuario::where('nombre', $request->nombre)->exists()) {
@@ -79,13 +79,13 @@ class AuthController extends Controller
             $resultado = DB::selectOne(
                 "INSERT INTO usuarios (nombre, clave, fecha_clave)
                  VALUES (?, sha256((?::text)::bytea), NOW())
-                 RETURNING id_usuario",
+                 RETURNING id",
                 [$request->nombre, $request->password]
             );
 
             DB::table('actuaciones')->insert([
                 'rol_id'     => $request->rol_id,
-                'usuario_id' => $resultado->id_usuario,
+                'usuario_id' => $resultado->id,
             ]);
         });
 

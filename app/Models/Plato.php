@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Plato extends Model
 {
     protected $table      = 'platos';
-    protected $primaryKey = 'id_plato';
+    protected $primaryKey = 'id';
     public    $timestamps = false;
 
     protected $fillable = ['nombre', 'precio', 'descripcion', 'tipo_id', 'tiempo'];
@@ -23,7 +23,7 @@ class Plato extends Model
 
     public function ordenes(): HasMany
     {
-        return $this->hasMany(Orden::class, 'plato_id', 'id_plato');
+        return $this->hasMany(Orden::class, 'plato_id', 'id');
     }
 
     public function getMinutosPreparacion(): int

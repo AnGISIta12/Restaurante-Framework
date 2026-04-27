@@ -27,8 +27,8 @@ class ReporteController extends Controller
         // Platos más pedidos (top 5)
         $platosTop = Plato::select('platos.*')
             ->selectRaw('SUM(ordenes.cantidad) as total_pedido')
-            ->join('ordenes', 'platos.id_plato', '=', 'ordenes.plato_id')
-            ->groupBy('platos.id_plato', 'platos.tipo_id', 'platos.nombre',
+            ->join('ordenes', 'platos.id', '=', 'ordenes.plato_id')
+            ->groupBy('platos.id', 'platos.tipo_id', 'platos.nombre',
                       'platos.descripcion', 'platos.tiempo', 'platos.precio')
             ->orderByDesc('total_pedido')
             ->limit(5)
@@ -36,7 +36,7 @@ class ReporteController extends Controller
 
         // Ingresos por plato
         $ingresos = DB::table('ordenes')
-            ->join('platos', 'ordenes.plato_id', '=', 'platos.id_plato')
+            ->join('platos', 'ordenes.plato_id', '=', 'platos.id')
             ->selectRaw('platos.nombre, SUM(platos.precio * ordenes.cantidad) as ingreso')
             ->groupBy('platos.nombre')
             ->orderByDesc('ingreso')
@@ -65,7 +65,7 @@ class ReporteController extends Controller
     public function reservaciones(): View
     {
         $reservaciones = Reservacion::with(['cliente', 'horario.mesa'])
-            ->orderByDesc('id_reservacion')
+            ->orderByDesc('id')
             ->paginate(20);
 
         return view('reportes.reservaciones', compact('reservaciones'));
@@ -74,7 +74,7 @@ class ReporteController extends Controller
     public function pedidos(): View
     {
         $pedidos = Pedido::with(['cliente', 'mesero', 'ordenes.plato'])
-            ->orderByDesc('id_pedido')
+            ->orderByDesc('id')
             ->paginate(20);
 
         return view('reportes.pedidos', compact('pedidos'));

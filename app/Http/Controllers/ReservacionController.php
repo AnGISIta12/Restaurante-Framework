@@ -52,7 +52,7 @@ class ReservacionController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'cliente_id' => ['required', 'exists:usuarios,id_usuario'],
+            'cliente_id' => ['required', 'exists:usuarios,id'],
             'cantidad'   => ['required', 'integer', 'min:1', 'max:20'],
         ], [
             'cliente_id.required' => 'Debes seleccionar un cliente.',
@@ -84,13 +84,13 @@ class ReservacionController extends Controller
     {
         $reservaciones = Reservacion::sinAsignar()
             ->with('cliente')
-            ->orderBy('id_reservacion')
+            ->orderBy('id')
             ->get();
 
         // Para cada reservación calculamos las mesas disponibles con suficiente capacidad
         $mesasPorReservacion = [];
         foreach ($reservaciones as $reservacion) {
-            $mesasPorReservacion[$reservacion->id_reservacion] = Mesa::disponibles()
+            $mesasPorReservacion[$reservacion->id] = Mesa::disponibles()
                 ->conCapacidad($reservacion->cantidad)
                 ->orderBy('sillas')
                 ->get();
@@ -113,8 +113,8 @@ class ReservacionController extends Controller
     public function guardarAsignacion(Request $request): RedirectResponse
     {
         $request->validate([
-            'reservacion_id' => ['required', 'exists:reservaciones,id_reservacion'],
-            'mesa_id'        => ['required', 'exists:mesas,id_mesa'],
+            'reservacion_id' => ['required', 'exists:reservaciones,id'],
+            'mesa_id'        => ['required', 'exists:mesas,id'],
         ]);
 
         $reservacion = Reservacion::findOrFail($request->reservacion_id);
@@ -122,7 +122,7 @@ class ReservacionController extends Controller
 
         // Asientos ya ocupados en la ventana actual de 2 horas
         $ocupados = (int) DB::table('horarios')
-            ->join('reservaciones', 'horarios.reservacion_id', '=', 'reservaciones.id_reservacion')
+            ->join('reservaciones', 'horarios.reservacion_id', '=', 'reservaciones.id')
             ->whereRaw("horarios.inicio BETWEEN NOW() - INTERVAL '2 hours' AND NOW() + INTERVAL '2 hours'")
             ->sum('reservaciones.cantidad');
 
@@ -136,7 +136,7 @@ class ReservacionController extends Controller
         DB::transaction(function () use ($request, $reservacion) {
             Horario::create([
                 'mesa_id'        => $request->mesa_id,
-                'reservacion_id' => $reservacion->id_reservacion,
+                'reservacion_id' => $reservacion->id,
                 'inicio'         => now(),
                 'duracion'       => '01:30:00',
             ]);
@@ -164,7 +164,7 @@ class ReservacionController extends Controller
         $mesas = Mesa::with(['horarios' => function ($q) use ($fecha) {
             $q->whereRaw("DATE(inicio) = ?", [$fecha])
               ->with('reservacion.cliente');
-        }])->orderBy('id_mesa')->get();
+        }])->orderBy('id')->get();
 
         return view('reservaciones.verificar', compact('mesas', 'fecha'));
     }
@@ -213,7 +213,7 @@ class ReservacionController extends Controller
                       Reservacion::ESTADO_CONFIRMADA,
                   ]);
             })
-            ->orderByRaw("(SELECT inicio FROM horarios WHERE reservacion_id = reservaciones.id_reservacion LIMIT 1) ASC NULLS LAST")
+            ->orderByRaw("(SELECT inicio FROM horarios WHERE reservacion_id = reservaciones.id LIMIT 1) ASC NULLS LAST")
             ->limit(30)
             ->get();
 
@@ -273,7 +273,7 @@ class ReservacionController extends Controller
     {
         $reservaciones = Reservacion::with(['horario.mesa'])
             ->where('cliente_id', session('usuario_id'))
-            ->orderByRaw("(SELECT inicio FROM horarios WHERE reservacion_id = reservaciones.id_reservacion LIMIT 1) DESC NULLS LAST")
+            ->orderByRaw("(SELECT inicio FROM horarios WHERE reservacion_id = reservaciones.id LIMIT 1) DESC NULLS LAST")
             ->get();
 
         return view('reservaciones.historial-cliente', compact('reservaciones'));
@@ -290,7 +290,7 @@ class ReservacionController extends Controller
     public function reporte(): View
     {
         $reservaciones = Reservacion::with(['cliente', 'horario.mesa'])
-            ->orderByRaw("(SELECT inicio FROM horarios WHERE reservacion_id = reservaciones.id_reservacion LIMIT 1) DESC NULLS LAST")
+            ->orderByRaw("(SELECT inicio FROM horarios WHERE reservacion_id = reservaciones.id LIMIT 1) DESC NULLS LAST")
             ->get();
 
         return view('reportes.reservaciones', compact('reservaciones'));

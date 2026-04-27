@@ -23,7 +23,7 @@ class MesaController extends Controller
      */
     public function index(): View
     {
-        $mesas       = Mesa::orderBy('id_mesa')->get();
+        $mesas       = Mesa::orderBy('id')->get();
         $cupoTotal   = Mesa::capacidadTotal();
 
         return view('mesas.index', compact('mesas', 'cupoTotal'));
@@ -89,7 +89,7 @@ class MesaController extends Controller
         $mesa->update(['sillas' => $request->sillas]);
 
         return redirect()->route('mesas.index')
-            ->with('success', "Mesa {$mesa->id_mesa} actualizada correctamente.");
+            ->with('success', "Mesa {$mesa->id} actualizada correctamente.");
     }
 
     /**
@@ -101,7 +101,7 @@ class MesaController extends Controller
      */
     public function destroy(Mesa $mesa): RedirectResponse
     {
-        $idMesa = $mesa->id_mesa;
+        $idMesa = $mesa->id;
 
         // Verificar que no tenga horarios activos
         if ($mesa->horarios()->activos()->exists()) {

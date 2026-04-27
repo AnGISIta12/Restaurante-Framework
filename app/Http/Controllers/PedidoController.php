@@ -26,7 +26,7 @@ class PedidoController extends Controller
     public function index(): View
     {
         $pedidos = Pedido::with(['cliente', 'mesero', 'ordenes.plato'])
-            ->orderByDesc('id_pedido')
+            ->orderByDesc('id')
             ->paginate(15);
 
         return view('pedidos.index', compact('pedidos'));
@@ -47,9 +47,9 @@ class PedidoController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'cliente_id' => ['required', 'exists:usuarios,id_usuario'],
+            'cliente_id' => ['required', 'exists:usuarios,id'],
             'platos'     => ['required', 'array', 'min:1'],
-            'platos.*'   => ['exists:platos,id_plato'],
+            'platos.*'   => ['exists:platos,id'],
             'cantidades' => ['required', 'array'],
             'cantidades.*' => ['integer', 'min:1'],
         ]);
@@ -64,7 +64,7 @@ class PedidoController extends Controller
                 $cantidad = $request->cantidades[$i] ?? 1;
                 Orden::create([
                     'plato_id'   => $plato_id,
-                    'pedido_id'  => $pedido->id_pedido,
+                    'pedido_id'  => $pedido->id,
                     'estado'     => Orden::ESTADO_PENDIENTE,
                     'cantidad'   => $cantidad,
                     'solicitado' => now(),
@@ -113,7 +113,7 @@ class PedidoController extends Controller
         if ($request->estado == Orden::ESTADO_EN_PREPARACION) {
             Preparacion::firstOrCreate([
                 'cocinero_id' => session('usuario_id'),
-                'orden_id'    => $orden->id_orden,
+                'orden_id'    => $orden->id,
             ]);
         }
 
