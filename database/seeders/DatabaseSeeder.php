@@ -26,9 +26,11 @@ class DatabaseSeeder extends Seeder
          | 1) Roles básicos
          |--------------------------------------------------------------
          */
-        $rolAdministrador = Rol::firstOrCreate(['nombre' => 'Administrador']);
-        Rol::firstOrCreate(['nombre' => 'Mesero']);
-        $rolCliente = Rol::firstOrCreate(['nombre' => 'Cliente']);
+        $rolAdministrador = Rol::firstOrCreate(['nombre' => Rol::ADMINISTRADOR]);
+        Rol::firstOrCreate(['nombre' => Rol::MAITRE]);
+        Rol::firstOrCreate(['nombre' => Rol::MESERO]);
+        Rol::firstOrCreate(['nombre' => Rol::COCINERO]);
+        $rolCliente = Rol::firstOrCreate(['nombre' => Rol::CLIENTE]);
 
         /*
          |--------------------------------------------------------------

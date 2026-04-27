@@ -25,6 +25,18 @@ class AuthController extends Controller
         if (Session::has('usuario_id')) {
             return redirect()->route('dashboard');
         }
+
+        // Garantiza que los roles operativos existan para el selector de registro.
+        foreach ([
+            Rol::ADMINISTRADOR,
+            Rol::MAITRE,
+            Rol::MESERO,
+            Rol::COCINERO,
+            Rol::CLIENTE,
+        ] as $nombreRol) {
+            Rol::firstOrCreate(['nombre' => $nombreRol]);
+        }
+
         $roles = Rol::orderBy('nombre')->get();
         return view('registro', compact('roles'));
     }
