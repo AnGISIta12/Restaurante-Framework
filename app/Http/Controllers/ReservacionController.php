@@ -235,7 +235,17 @@ class ReservacionController extends Controller
      */
     public function solicitar(): View
     {
-        return view('reservaciones.solicitar');
+        $mesas = Mesa::orderBy('id_mesa')->get();
+        
+        // Generar un listado de horarios de ejemplo para el dropdown
+        $horarios = [
+            '13:00', '13:30', '14:00', '14:30', '15:00',
+            '15:30', '16:00', '16:30', '17:00', '17:30',
+            '18:00', '18:30', '19:00', '19:30', '20:00',
+            '20:30', '21:00', '21:30', '22:00'
+        ];
+
+        return view('reservaciones.solicitar', compact('mesas', 'horarios'));
     }
 
     /**
@@ -249,13 +259,25 @@ class ReservacionController extends Controller
     {
         $request->validate([
             'cantidad' => ['required', 'integer', 'min:1', 'max:20'],
+            'fecha'    => ['required', 'date', 'after_or_equal:today'],
+            'hora'     => ['required'],
+            'mesa_id'  => ['required', 'exists:mesas,id_mesa'],
         ]);
 
-        Reservacion::create([
-            'cliente_id' => session('usuario_id'),
-            'cantidad'   => $request->cantidad,
-            'estado'     => Reservacion::ESTADO_PENDIENTE,
-        ]);
+        DB::transaction(function () use ($request) {
+            $reservacion = Reservacion::create([
+                'cliente_id' => session('usuario_id'),
+                'cantidad'   => $request->cantidad,
+                'estado'     => Reservacion::ESTADO_PENDIENTE,
+            ]);
+
+            Horario::create([
+                'mesa_id'        => $request->mesa_id,
+                'reservacion_id' => $reservacion->id_reservacion,
+                'inicio'         => $request->fecha . ' ' . $request->hora . ':00',
+                'duracion'       => '01:30:00',
+            ]);
+        });
 
         return redirect()->route('cliente.reservaciones')
             ->with('success', 'Reservación enviada. El maître te confirmará pronto.');
@@ -273,7 +295,6 @@ class ReservacionController extends Controller
     {
         $reservaciones = Reservacion::with(['horario.mesa'])
             ->where('cliente_id', session('usuario_id'))
-            ->orderByRaw("(SELECT inicio FROM horarios WHERE reservacion_id = reservaciones.id_reservacion LIMIT 1) DESC NULLS LAST")
             ->get();
 
         return view('reservaciones.historial-cliente', compact('reservaciones'));
