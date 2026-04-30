@@ -13,6 +13,8 @@ use Illuminate\View\View;
  * Permite al Administrador crear, editar y eliminar mesas.
  * Acceso restringido al rol Administrador mediante middleware.
  */
+
+// AÑADIMOS LOS BRIEF DE NUESTRA BD PARA MAYOR GESTION Y LOGICA DE NEGOCIO EN LOS CONTROLADORES, ASI QUEDA TODO MAS CLARO Y ORDENADO, ADEMAS DE QUE SEGUIMOS LAS BUENAS PRACTICAS DE DOCUMENTACION PARA FACILITAR EL MANTENIMIENTO FUTURO DEL CODIGO
 class MesaController extends Controller
 {
     /**
@@ -23,10 +25,10 @@ class MesaController extends Controller
      */
     public function index(): View
     {
-        $mesas       = Mesa::orderBy('id_mesa')->get();
-        $cupoTotal   = Mesa::capacidadTotal();
+        $mesas       = Mesa::orderBy('id_mesa')->get(); // Obtenemos todas las mesas ordenadas por su ID para mostrar un listado organizado
+        $cupoTotal   = Mesa::capacidadTotal(); // Calculamos la capacidad total del restaurante sumando las sillas de todas las mesas para mostrar esta información en el dashboard del Administrador
 
-        return view('mesas.index', compact('mesas', 'cupoTotal'));
+        return view('mesas.index', compact('mesas', 'cupoTotal')); // Lo mostramos :)
     }
 
     /**
@@ -35,7 +37,7 @@ class MesaController extends Controller
      */
     public function create(): View
     {
-        return view('mesas.create');
+        return view('mesas.create'); // Mostramos el formulario para crear una nueva mesa, donde el Administrador puede ingresar el número de sillas que tendrá la mesa
     }
 
     /**
@@ -47,7 +49,7 @@ class MesaController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $request->validate([ // Validamos el campo 'sillas' para asegurarnos de que sea un número entero entre 1 y 50, ya que una mesa no puede tener menos de 1 silla ni más de 50 sillas
             'sillas' => ['required', 'integer', 'min:1', 'max:50'],
         ], [
             'sillas.required' => 'El número de sillas es obligatorio.',
@@ -56,10 +58,10 @@ class MesaController extends Controller
             'sillas.max'      => 'Una mesa no puede tener más de 50 sillas.',
         ]);
 
-        Mesa::create(['sillas' => $request->sillas]);
+        Mesa::create(['sillas' => $request->sillas]); // Creamos una nueva mesa en la base de datos con el número de sillas proporcionado por el Administrador a través del formulario
 
         return redirect()->route('mesas.index')
-            ->with('success', 'Mesa creada correctamente.');
+            ->with('success', 'Mesa creada correctamente.'); // Redirigimos al listado de mesas con un mensaje de éxito después de crear la nueva mesa
     }
 
     /**
@@ -69,7 +71,7 @@ class MesaController extends Controller
      */
     public function edit(Mesa $mesa): View
     {
-        return view('mesas.edit', compact('mesa'));
+        return view('mesas.edit', compact('mesa')); // Mostramos el formulario de edición para la mesa especificada, permitiendo al Administrador modificar el número de sillas
     }
 
     /**
@@ -82,12 +84,11 @@ class MesaController extends Controller
      */
     public function update(Request $request, Mesa $mesa): RedirectResponse
     {
-        $request->validate([
+        $request->validate([ // Validamos el campo 'sillas' para asegurarnos de que sea un número entero entre 1 y 50, ya que una mesa no puede tener menos de 1 silla ni más de 50 sillas
             'sillas' => ['required', 'integer', 'min:1', 'max:50'],
         ]);
 
-        $mesa->update(['sillas' => $request->sillas]);
-
+        $mesa->update(['sillas' => $request->sillas]); // Actualizamos el número de sillas de la mesa en la base de datos con el nuevo valor proporcionado por el Administrador a través del formulario de edición
         return redirect()->route('mesas.index')
             ->with('success', "Mesa {$mesa->id_mesa} actualizada correctamente.");
     }
@@ -101,15 +102,15 @@ class MesaController extends Controller
      */
     public function destroy(Mesa $mesa): RedirectResponse
     {
-        $idMesa = $mesa->id_mesa;
+        $idMesa = $mesa->id_mesa; // Guardamos el ID de la mesa antes de eliminarla para mostrarlo en el mensaje de éxito después de la eliminación
 
         // Verificar que no tenga horarios activos
         if ($mesa->horarios()->activos()->exists()) {
-            return redirect()->route('mesas.index')
+            return redirect()->route('mesas.index') // Redirigimos al listado de mesas con un mensaje de error si la mesa tiene horarios activos asociados, ya que no se puede eliminar una mesa que está reservada para algún horario
                 ->withErrors(['error' => "La mesa {$idMesa} tiene reservaciones activas y no puede eliminarse."]);
         }
 
-        $mesa->delete();
+        $mesa->delete(); // Eliminamos la mesa de la base de datos si no tiene horarios activos asociados, permitiendo al Administrador eliminar mesas que ya no se utilizan o que fueron creadas por error
 
         return redirect()->route('mesas.index')
             ->with('success', "Mesa {$idMesa} eliminada correctamente.");
