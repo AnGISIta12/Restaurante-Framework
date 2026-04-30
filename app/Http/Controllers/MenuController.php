@@ -16,20 +16,20 @@ class MenuController extends Controller
 {
     public function index(): View
     {
-        $tipos  = Tipo::with(['platos' => fn($q) => $q->orderBy('nombre')])->get();
-        $platos = Plato::with('tipo')->orderBy('nombre')->get();
-        return view('menu.index', compact('tipos', 'platos'));
+        $tipos  = Tipo::with(['platos' => fn($q) => $q->orderBy('nombre')])->get(); // Cargamos los tipos con sus platos ordenados por nombre para mostrar el menú organizado por categorías
+        $platos = Plato::with('tipo')->orderBy('nombre')->get(); // Cargamos todos los platos con su tipo para mostrar el menú completo en una tabla ordenada por nombre, aunque también podríamos mostrarlo agrupado por tipo usando la relación cargada en $tipos
+        return view('menu.index', compact('tipos', 'platos')); // Pasamos tanto los tipos con sus platos como la lista completa de platos a la vista para mostrar el menú de forma organizada y permitir acciones de edición y eliminación para Administrador y Maitre
     }
 
     public function create(): View
     {
-        $tipos = Tipo::orderBy('nombre')->get();
+        $tipos = Tipo::orderBy('nombre')->get(); // Obtenemos los tipos de plato ordenados alfabéticamente para mostrar en el dropdown de selección al crear un nuevo plato
         return view('menu.create', compact('tipos'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse // Valida y guarda un nuevo plato en la base de datos
     {
-        $request->validate([
+        $request->validate([ // Validamos los datos del formulario para crear un nuevo plato, asegurándonos de que el nombre, tipo y precio sean proporcionados y válidos, mientras que la descripción y tiempo de preparación son opcionales
             'nombre'      => ['required', 'string', 'max:100'],
             'tipo_id'     => ['required', 'exists:tipos,id'],
             'precio'      => ['required', 'numeric', 'min:0'],
@@ -42,7 +42,7 @@ class MenuController extends Controller
             'precio.numeric'   => 'El precio debe ser un número.',
         ]);
 
-        Plato::create($request->only(['nombre', 'tipo_id', 'precio', 'descripcion', 'tiempo']));
+        Plato::create($request->only(['nombre', 'tipo_id', 'precio', 'descripcion', 'tiempo'])); // Creamos un nuevo plato en la base de datos con los datos validados del formulario
 
         return redirect()->route('menu.index')
             ->with('success', 'Plato creado correctamente.');
@@ -50,13 +50,13 @@ class MenuController extends Controller
 
     public function edit(Plato $plato): View
     {
-        $tipos = Tipo::orderBy('nombre')->get();
+        $tipos = Tipo::orderBy('nombre')->get(); // Obtenemos los tipos de plato ordenados alfabéticamente para mostrar en el dropdown de selección al editar un plato existente, permitiendo cambiar su tipo si es necesario
         return view('menu.edit', compact('plato', 'tipos'));
     }
 
     public function update(Request $request, Plato $plato): RedirectResponse
     {
-        $request->validate([
+        $request->validate([ // Validamos los datos del formulario para actualizar un plato existente, asegurándonos de que el nombre, tipo y precio sean proporcionados y válidos, mientras que la descripción y tiempo de preparación son opcionales
             'nombre'      => ['required', 'string', 'max:100'],
             'tipo_id'     => ['required', 'exists:tipos,id'],
             'precio'      => ['required', 'numeric', 'min:0'],
@@ -64,15 +64,15 @@ class MenuController extends Controller
             'tiempo'      => ['nullable', 'string'],
         ]);
 
-        $plato->update($request->only(['nombre', 'tipo_id', 'precio', 'descripcion', 'tiempo']));
+        $plato->update($request->only(['nombre', 'tipo_id', 'precio', 'descripcion', 'tiempo'])); // Actualizamos el plato existente en la base de datos con los datos validados del formulario
 
         return redirect()->route('menu.index')
             ->with('success', "Plato '{$plato->nombre}' actualizado.");
     }
 
-    public function destroy(Plato $plato): RedirectResponse
+    public function destroy(Plato $plato): RedirectResponse // Elimina un plato de la base de datos
     {
-        $nombre = $plato->nombre;
+        $nombre = $plato->nombre; // Guardamos el nombre del plato antes de eliminarlo para mostrarlo en el mensaje de éxito después de la eliminación
         $plato->delete();
 
         return redirect()->route('menu.index')
