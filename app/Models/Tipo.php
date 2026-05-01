@@ -19,6 +19,18 @@ class Tipo extends Model
 
     protected $fillable = ['nombre'];
 
+    public static function boot()
+    {
+        parent::boot();
+        static::saving(function ($tipo) {
+            $permitidos = ['entrada', 'plato fuerte', 'bebida'];
+            if (!in_array(strtolower($tipo->nombre), $permitidos)) {
+                throw new \Exception("El tipo de plato solo puede ser: " . implode(', ', $permitidos));
+            }
+        });
+    }
+
+
     /*------------------------------------------------------------------
      | Relaciones
      ------------------------------------------------------------------*/

@@ -1,15 +1,58 @@
-<div style="max-width:800px;margin:40px auto;background:white;padding:30px;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.08);">
-    <h1>✅ Pedidos Listos para Entregar</h1>
-    <p>En esta vista el mesero consulta las órdenes que cocina marcó como listas.</p>
+@extends('layouts.app')
 
-    <div style="border:1px solid #eee;border-radius:12px;padding:16px;margin-top:20px;">
-        <strong>Pedido #001</strong>
-        <p>Mesa 4 · Plato: Pasta carbonara · Estado: <span style="color:green;">Listo</span></p>
-        <button style="background:#2e7d32;color:white;border:none;padding:10px 18px;border-radius:8px;">
-            Confirmar entrega
-        </button>
+@section('title', 'Entregas Pendientes')
+
+@section('content')
+<div class="card">
+    <div class="card-header">
+        <h3>✅ Órdenes Listas</h3>
+        <p style="font-size: 0.85rem; color: var(--gray);">Platos que ya salieron de cocina y esperan ser entregados.</p>
     </div>
 
-    <br>
-    <a href="/dashboard">⬅ Volver</a>
+    <div class="table-wrap" style="margin-top: 20px;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Hora Listo</th>
+                    <th>Pedido</th>
+                    <th>Plato</th>
+                    <th>Cant.</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($ordenes as $orden)
+                    <tr>
+                        <td>{{ now()->diffForHumans($orden->solicitado) }}</td>
+                        <td>
+                            <strong>#{{ str_pad($orden->pedido_id, 3, '0', STR_PAD_LEFT) }}</strong><br>
+                            <small>{{ $orden->pedido->cliente->nombre }}</small>
+                        </td>
+                        <td>
+                            <span style="font-size: 1rem; font-weight: 600;">{{ $orden->plato->nombre }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-done">{{ $orden->cantidad }}</span>
+                        </td>
+                        <td>
+                            <form action="{{ route('ordenes.entregar', $orden->id_orden) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    Confirmar Entrega
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 60px;">
+                            <div style="font-size: 3rem; margin-bottom: 15px;">🍽️</div>
+                            <p style="color: var(--gray);">Todo entregado. ¡Buen trabajo!</p>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 </div>
+@endsection

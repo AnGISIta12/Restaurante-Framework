@@ -1,25 +1,59 @@
-<div style="max-width:850px;margin:40px auto;background:white;padding:30px;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.08);">
-    <h1>🧾 Pedidos</h1>
-    <p>Consulta general de pedidos registrados por los meseros.</p>
+@extends('layouts.app')
 
-    <table style="width:100%;border-collapse:collapse;margin-top:20px;">
-        <tr style="background:#f5f0e8;">
-            <th style="padding:12px;text-align:left;">Pedido</th>
-            <th style="padding:12px;text-align:left;">Cliente</th>
-            <th style="padding:12px;text-align:left;">Estado</th>
-        </tr>
-        <tr>
-            <td style="padding:12px;">#001</td>
-            <td style="padding:12px;">Daniela Ramírez</td>
-            <td style="padding:12px;color:#d97706;">En preparación</td>
-        </tr>
-        <tr>
-            <td style="padding:12px;">#002</td>
-            <td style="padding:12px;">Lorena</td>
-            <td style="padding:12px;color:green;">Listo</td>
-        </tr>
-    </table>
+@section('title', 'Historial de Pedidos')
 
-    <br>
-    <a href="/dashboard">⬅ Volver</a>
+@section('content')
+<div class="card">
+    <div class="card-header">
+        <h3>🧾 Historial de Pedidos</h3>
+        <a href="{{ route('pedidos.create') }}" class="btn btn-primary btn-sm">
+            + Nuevo Pedido
+        </a>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Mesero</th>
+                    <th>Órdenes</th>
+                    <th>Total</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($pedidos as $pedido)
+                    <tr>
+                        <td><strong>#{{ str_pad($pedido->id_pedido, 3, '0', STR_PAD_LEFT) }}</strong></td>
+                        <td>{{ $pedido->cliente->nombre }}</td>
+                        <td>{{ $pedido->mesero->nombre }}</td>
+                        <td>
+                            <small>
+                                {{ $pedido->ordenes->count() }} ítems
+                            </small>
+                        </td>
+                        <td>${{ number_format($pedido->getTotal(), 2) }}</td>
+                        <td>
+                            <a href="{{ route('pedidos.show', $pedido->id_pedido) }}" class="btn btn-secondary btn-sm">
+                                Ver Detalle
+                            </a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--gray);">
+                            No hay pedidos registrados.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top: 20px;">
+        {{ $pedidos->links() }}
+    </div>
 </div>
+@endsection
