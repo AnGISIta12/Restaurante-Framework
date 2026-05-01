@@ -22,25 +22,46 @@
         body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--dark); min-height: 100vh; display: flex; }
 
         /* ---- Sidebar ---- */
+        /* Reemplaza el bloque .sidebar en el <style> de layouts/app.blade.php */
+
         .sidebar {
-            width: var(--sidebar-w); min-height: 100vh; background: var(--dark);
-            display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100;
+            width: var(--sidebar-w);
+            height: 100vh;           /* altura fija, no min-height */
+            background: var(--dark);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            overflow: hidden;        /* el scroll solo en .sidebar-nav */
         }
-        .sidebar-brand {
-            padding: 28px 24px 20px;
-            border-bottom: 1px solid rgba(255,255,255,.1);
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 12px 0;
+            overflow-y: auto;        /* scroll solo en la nav, no en todo el sidebar */
+            /* scrollbar discreta */
+            scrollbar-width: thin;
+            scrollbar-color: rgba(201,168,76,.3) transparent;
         }
-        .sidebar-brand h1 {
-            font-family: 'Playfair Display', serif; color: var(--gold);
-            font-size: 1.25rem; font-weight: 700; letter-spacing: .5px;
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 4px;
         }
-        .sidebar-brand small { color: rgba(255,255,255,.4); font-size: .7rem; display: block; margin-top: 2px; }
-        .sidebar-user {
-            padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,.08);
+        .sidebar-nav::-webkit-scrollbar-track {
+            background: transparent;
         }
-        .sidebar-user .u-name { color: #fff; font-size: .85rem; font-weight: 500; }
-        .sidebar-user .u-rol  { color: var(--gold-lt); font-size: .72rem; opacity: .8; }
-        .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: rgba(201,168,76,.3);
+            border-radius: 2px;
+        }
+
+        .sidebar-footer {
+            padding: 16px 24px;
+            border-top: 1px solid rgba(255,255,255,.08);
+            flex-shrink: 0;          /* nunca se comprime, siempre visible */
+        }
         .nav-section { padding: 8px 24px 4px; color: rgba(255,255,255,.3); font-size: .65rem; text-transform: uppercase; letter-spacing: 1px; }
         .nav-link {
             display: flex; align-items: center; gap: 10px;
