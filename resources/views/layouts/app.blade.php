@@ -268,17 +268,37 @@
     </header>
     <div class="content">
 
-        {{-- Mensajes flash --}}
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-        @if($errors->any())
-            <div class="alert alert-error">
-                @foreach($errors->all() as $e)
-                    <div>{{ $e }}</div>
-                @endforeach
-            </div>
-        @endif
+        {{-- Notificaciones --}}
+@if(session('success'))
+    <div class="alert alert-success" id="alert-success">
+        ✔ {{ session('success') }}
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="alert alert-error" id="alert-error">
+        ✖ {{ session('error') }}
+    </div>
+@endif
+
+@if($errors->any())
+    <div class="alert alert-error" id="alert-validation">
+        <strong>Error:</strong>
+        @foreach($errors->all() as $e)
+            <div>• {{ $e }}</div>
+        @endforeach
+    </div>
+@endif
+
+<script>
+    setTimeout(() => {
+        document.querySelectorAll('.alert').forEach(el => {
+            el.style.transition = 'opacity 0.5s';
+            el.style.opacity = '0';
+            setTimeout(() => el.remove(), 500);
+        });
+    }, 4000);
+</script>
 
         @yield('content')
     </div>

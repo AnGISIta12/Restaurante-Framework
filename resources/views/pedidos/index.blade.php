@@ -52,8 +52,5 @@
         </table>
     </div>
 
-    <div style="margin-top: 20px;">
-        {{ $pedidos->links() }}
-    </div>
 </div>
 @endsection

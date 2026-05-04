@@ -190,27 +190,20 @@ class ReservacionController extends Controller
      * @brief Lista las reservaciones próximas o pendientes de asignar.
      * @return View
      */
+    
     public function proximas(): View
-    {
-        $reservaciones = Reservacion::with(['cliente', 'horario.mesa'])
-            ->where(function ($q) {
-                $q->whereHas('horario', fn($h) => $h->where('inicio', '>=', now())) // Filtramos las reservaciones para obtener solo aquellas que tienen un horario asignado con una fecha de inicio en el futuro (próximas) o que están en estado Pendiente o Confirmada sin importar si tienen horario asignado o no, lo que nos permite mostrar en el panel de reservaciones próximas del Maitre tanto las reservaciones que ya tienen una mesa asignada y están programadas para el futuro, como las reservaciones que aún no tienen una mesa asignada pero están en estado Pendiente o Confirmada y requieren atención para ser asignadas a una mesa
-                  ->orWhereIn('estado', [
-                      Reservacion::ESTADO_PENDIENTE, // Incluimos las reservaciones que están en estado Pendiente (0) o Confirmada (1) sin importar si tienen horario asignado o no, ya que estas reservaciones requieren atención para ser asignadas a una mesa y confirmadas, lo que permite al Maitre identificar fácilmente las reservaciones que aún no tienen una mesa asignada pero están en proceso de ser atendidas
-                      Reservacion::ESTADO_CONFIRMADA, //
-                  ]);
-            })
-            ->orderByRaw("(SELECT inicio FROM horarios WHERE reservacion_id = reservaciones.id_reservacion LIMIT 1) ASC NULLS LAST")
-            ->limit(30) // Limitamos a las 30 reservaciones más próximas para mostrar en el panel de reservaciones próximas del Maitre, lo que permite enfocarse en las reservaciones que requieren atención inmediata sin sobrecargar la vista con demasiadas reservaciones futuras o pendientes, facilitando la gestión y asignación de mesas para las reservaciones más relevantes en el corto plazo
-            ->get();
+{
+    $reservaciones = Reservacion::with(['cliente', 'horario.mesa'])
+        ->orderBy('id_reservacion')
+        ->get();
 
-        // Notificación: reservaciones que empiezan en los próximos 30 minutos
-        $porEmpezar = Horario::proximos(30) // Obtenemos los horarios de las reservaciones que están programadas para empezar en los próximos 30 minutos para mostrar una notificación al Maitre sobre las reservaciones que requieren atención inmediata, lo que permite al Maitre prepararse para atender a los clientes de esas reservaciones y gestionar eficientemente la asignación de mesas y el personal necesario para atenderlas
-            ->with('reservacion.cliente', 'mesa')
-            ->get();
+    $porEmpezar = Horario::proximos(30)
+        ->with('reservacion.cliente', 'mesa')
+        ->orderBy('inicio')
+        ->get();
 
-        return view('reservaciones.proximas', compact('reservaciones', 'porEmpezar'));
-    }
+    return view('reservaciones.proximas', compact('reservaciones', 'porEmpezar'));
+}
 
 
      // CLIENTE — Solicitar reservación

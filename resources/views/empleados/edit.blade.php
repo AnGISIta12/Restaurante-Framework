@@ -61,11 +61,6 @@
             </div>
 
             <div style="display:flex; gap:12px; justify-content:space-between; align-items:center;">
-                <form method="POST" action="{{ route('empleados.destroy', $usuario) }}"
-                      onsubmit="return confirm('¿Eliminar a {{ $usuario->nombre }}? Esta acción no se puede deshacer.')">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-sm">Eliminar empleado</button>
-                </form>
                 <div style="display:flex; gap:12px;">
                     <a href="{{ route('empleados.index') }}" class="btn btn-secondary">Cancelar</a>
                     <button type="submit" class="btn btn-primary">Actualizar Rol</button>
