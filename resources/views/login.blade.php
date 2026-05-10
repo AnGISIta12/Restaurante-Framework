@@ -4,84 +4,317 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión — La Mesa</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
     <style>
-        :root { --gold:#C9A84C; --dark:#1A1A18; --cream:#FAF7F2; --border:#E2DDD4; --rust:#8B3A2A; }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--dark); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .bg-pattern {
-            position: fixed; inset: 0; opacity: .05;
-            background-image: repeating-linear-gradient(45deg, var(--gold) 0, var(--gold) 1px, transparent 0, transparent 50%);
-            background-size: 20px 20px;
+        :root {
+            --navy: #000077;
+            --navy-dark: #000055;
+            --cyan: #00e5ff;
+            --cyan-soft: #e9fbff;
+            --text: #001b44;
+            --muted: #005577;
+            --border: rgba(0,188,212,.25);
         }
-        .login-card {
-            background: var(--cream); border-radius: 16px; padding: 48px 40px;
-            width: 100%; max-width: 400px; position: relative; z-index: 1;
-            box-shadow: 0 32px 64px rgba(0,0,0,.4);
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
-        .brand { text-align: center; margin-bottom: 36px; }
-        .brand h1 { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--dark); }
-        .brand p { color: #888; font-size: .85rem; margin-top: 6px; }
-        .gold-line { width: 48px; height: 3px; background: var(--gold); margin: 12px auto; border-radius: 2px; }
-        .form-group { margin-bottom: 18px; }
-        .form-group label { display: block; font-size: .82rem; font-weight: 500; color: var(--dark); margin-bottom: 6px; }
-        .form-control {
-            width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px;
-            font-family: inherit; font-size: .9rem; background: #fff; color: var(--dark); transition: border-color .15s;
+
+        body {
+            min-height: 100vh;
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, #0500d8 0%, #006dff 55%, #00e5ff 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            padding: 24px;
         }
-        .form-control:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,.15); }
+
+        .auth-shell {
+            width: min(900px, 100%);
+            min-height: 560px;
+            background: var(--cyan-soft);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 26px 60px rgba(0,0,80,.35);
+        }
+
+        .auth-header {
+            height: 76px;
+            background: var(--navy);
+            display: flex;
+            align-items: center;
+            padding: 0 38px;
+        }
+
+        .auth-header h1 {
+            font-family: 'Playfair Display', serif;
+            color: var(--cyan);
+            font-size: 1.45rem;
+            letter-spacing: .3px;
+        }
+
+        .auth-header small {
+            display: block;
+            margin-top: 4px;
+            color: rgba(0,229,255,.45);
+            font-size: .58rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        .auth-body {
+            min-height: 484px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 44px 24px 56px;
+        }
+
+        .login-panel {
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+        }
+
+        .logo-icon {
+            font-size: 2.3rem;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,80,.22));
+        }
+
+        .brand h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.05rem;
+            color: var(--navy-dark);
+            margin-bottom: 8px;
+        }
+
+        .brand p {
+            font-size: .67rem;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 28px;
+        }
+
+        .tabs {
+            height: 40px;
+            background: rgba(0,85,119,.10);
+            border-radius: 999px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            margin-bottom: 26px;
+            overflow: hidden;
+        }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-size: .82rem;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background: var(--navy);
+            color: var(--cyan);
+            box-shadow: 0 10px 26px rgba(0,0,80,.28);
+        }
+
+        .alert-error,
+        .alert-success {
+            text-align: left;
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: .82rem;
+            margin-bottom: 18px;
+        }
+
+        .alert-error {
+            background: #ffebee;
+            border: 1px solid #ef9a9a;
+            color: #7f1d1d;
+        }
+
+        .alert-success {
+            background: #e0f7fa;
+            border: 1px solid #00bcd4;
+            color: #003344;
+        }
+
+        form {
+            text-align: left;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            color: var(--navy-dark);
+            font-size: .72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            height: 44px;
+            border-radius: 9px;
+            border: 1px solid rgba(0,0,80,.18);
+            padding: 0 14px;
+            font-family: inherit;
+            font-size: .92rem;
+            background: white;
+            color: var(--text);
+            transition: .18s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 4px rgba(0,229,255,.16);
+        }
+
         .btn-submit {
-            width: 100%; padding: 12px; background: var(--gold); color: var(--dark); border: none;
-            border-radius: 8px; font-family: inherit; font-size: .95rem; font-weight: 600;
-            cursor: pointer; transition: background .15s; margin-top: 8px;
+            width: 100%;
+            height: 46px;
+            border: none;
+            border-radius: 9px;
+            margin-top: 6px;
+            background: linear-gradient(135deg, var(--navy), #0066cc);
+            color: var(--cyan);
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 14px 30px rgba(0,0,80,.25);
+            transition: .18s;
         }
-        .btn-submit:hover { background: #B8942E; }
-        .alert-error { background: #FEF2F2; border: 1px solid #FCA5A5; color: #7F1D1D; padding: 10px 14px; border-radius: 7px; font-size: .82rem; margin-bottom: 18px; }
-        .register-link { text-align: center; margin-top: 20px; font-size: .82rem; color: #888; }
-        .register-link a { color: var(--gold); text-decoration: none; font-weight: 500; }
-        .register-link a:hover { text-decoration: underline; }
+
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            background: linear-gradient(135deg, #000099, #008cff);
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 22px;
+            color: var(--muted);
+            font-size: .84rem;
+        }
+
+        .register-link a {
+            color: var(--navy);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .register-link a:hover {
+            color: #008cff;
+        }
+
+        @media (max-width: 620px) {
+            .auth-shell {
+                min-height: auto;
+            }
+
+            .auth-header {
+                padding: 0 24px;
+            }
+
+            .auth-body {
+                padding: 34px 20px 42px;
+            }
+        }
     </style>
 </head>
+
 <body>
-    <div class="bg-pattern"></div>
-    <div class="login-card">
-        <div class="brand">
-            <h1>La Mesa</h1>
-            <div class="gold-line"></div>
-            <p>Sistema de Gestión de Restaurante</p>
-        </div>
-
-        @if($errors->any())
-            <div class="alert-error">
-                @foreach($errors->all() as $e){{ $e }}<br>@endforeach
+    <main class="auth-shell">
+        <header class="auth-header">
+            <div>
+                <h1>La Mesa</h1>
+                <small>Sistema de Gestión · Restaurante</small>
             </div>
-        @endif
+        </header>
 
-        @if(session('success'))
-            <div style="background:#EDFAF0;border:1px solid #6DC97A;color:#1A6130;padding:10px 14px;border-radius:7px;font-size:.82rem;margin-bottom:18px;">
-                {{ session('success') }}
-            </div>
-        @endif
+        <section class="auth-body">
+            <div class="login-panel">
+                <div class="logo-icon">🍽️</div>
 
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
-            <div class="form-group">
-                <label for="nombre">Usuario</label>
-                <input type="text" id="nombre" name="nombre" class="form-control"
-                       value="{{ old('nombre') }}" placeholder="Tu nombre de usuario" required autofocus>
-            </div>
-            <div class="form-group">
-                <label for="password">Contraseña</label>
-                <input type="password" id="password" name="password" class="form-control"
-                       placeholder="••••••••" required>
-            </div>
-            <button type="submit" class="btn-submit">Ingresar</button>
-        </form>
+                <div class="brand">
+                    <h2>La Mesa</h2>
+                    <p>Sistema de Gestión · Restaurante</p>
+                </div>
 
-        <div class="register-link">
-            ¿No tienes cuenta? <a href="{{ route('registro') }}">Regístrate</a>
-        </div>
-    </div>
+                <div class="tabs">
+                    <a href="{{ route('login') }}" class="tab active">Iniciar Sesión</a>
+                    <a href="{{ route('registro') }}" class="tab">Crear Cuenta</a>
+                </div>
+
+                @if($errors->any())
+                    <div class="alert-error">
+                        @foreach($errors->all() as $e)
+                            <div>{{ $e }}</div>
+                        @endforeach
+                    </div>
+                @endif
+
+                @if(session('success'))
+                    <div class="alert-success">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('login') }}">
+                    @csrf
+
+                    <div class="form-group">
+                        <label for="nombre">Nombre de usuario</label>
+                        <input
+                            type="text"
+                            id="nombre"
+                            name="nombre"
+                            value="{{ old('nombre') }}"
+                            placeholder="Ej: Ana Garcia"
+                            required
+                            autofocus
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Contraseña</label>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="••••••••"
+                            required
+                        >
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        Entrar →
+                    </button>
+                </form>
+
+                <div class="register-link">
+                    ¿No tienes cuenta? <a href="{{ route('registro') }}">Regístrate</a>
+                </div>
+            </div>
+        </section>
+    </main>
 </body>
 </html>
