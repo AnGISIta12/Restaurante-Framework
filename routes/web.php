@@ -8,6 +8,7 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\ConfiguracionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,6 +57,10 @@ Route::middleware('auth.session.custom')->group(function () {
 
         // Menú — aprobación y gestión final de la carta
         Route::resource('menu', MenuController::class)->except(['show', 'index']);
+
+        // Configuración — límite máximo de sillas y umbral de alerta
+        Route::get('/configuracion',  [ConfiguracionController::class, 'edit'])->name('configuracion.edit');
+        Route::put('/configuracion',  [ConfiguracionController::class, 'update'])->name('configuracion.update');
     });
 
     /*------------------------------------------------------------------

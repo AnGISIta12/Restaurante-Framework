@@ -97,6 +97,12 @@
                 <h3>Reportes Generales</h3>
                 <p>Estadísticas administrativas del restaurante</p>
             </a>
+
+            <a href="{{ route('configuracion.edit') }}" class="dash-card">
+                <span>⚙️</span>
+                <h3>Capacidad del Local</h3>
+                <p>Configurar límite máximo de sillas y alertas</p>
+            </a>
         @endif
 
         @if($rol === 'Maitre')

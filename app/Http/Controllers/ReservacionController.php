@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ConfiguracionRestaurante;
 use App\Models\Horario;
 use App\Models\Mesa;
 use App\Models\Reservacion;
@@ -78,7 +79,11 @@ class ReservacionController extends Controller
         ]);
 
         $reservacion = Reservacion::findOrFail($request->reservacion_id); // Obtenemos la reservación seleccionada para asignarle una mesa
-        $cupoTotal   = Mesa::capacidadTotal();
+
+        // Obtenemos el límite efectivo de sillas del restaurante desde la
+        // configuración del Administrador (manual si > 0, o automático por mesas)
+        $config    = ConfiguracionRestaurante::actual();
+        $cupoTotal = $config->limiteEfectivo();
 
         // Asientos ya ocupados en la ventana actual de 2 horas
         $ocupados = (int) DB::table('horarios')
@@ -91,9 +96,13 @@ class ReservacionController extends Controller
         
             return redirect()->route('reservaciones.asignar')
                 ->withErrors([ // Si al asignar la mesa para la reservación seleccionada se superaría el cupo total del restaurante, volvemos al formulario de asignación con un mensaje de error específico que indica que no se puede realizar la asignación debido a que el restaurante alcanzaría su capacidad máxima de personas
-                    'cupo' => "No se puede asignar: el restaurante superaría su cupo máximo de {$cupoTotal} personas.",
+                    'cupo' => "No se puede asignar: el restaurante superaría su cupo máximo de {$cupoTotal} personas (límite configurado por el Administrador).",
                 ]);
         }
+
+        // Verificamos si al asignar la mesa se estaría cerca del umbral de
+        // alerta configurado por el Administrador para mostrar un aviso
+        $alertaPost = $config->verificarAlerta($ocupados + $reservacion->cantidad);
 
         DB::transaction(function () use ($request, $reservacion) {
             Horario::create([
@@ -106,8 +115,15 @@ class ReservacionController extends Controller
             $reservacion->update(['estado' => Reservacion::ESTADO_ASIGNADA]); // Actualizamos el estado de la reservación a Asignada (2) después de crear el horario con la mesa asignada
         });
 
+        // Si después de la asignación se alcanza el umbral de alerta,
+        // agregamos una advertencia al mensaje de éxito para notificar al Maitre
+        $mensaje = 'Mesa asignada correctamente.';
+        if ($alertaPost['alerta']) {
+            $mensaje .= " ⚠️ ¡Atención! El restaurante está al {$alertaPost['porcentaje']}% de su capacidad ({$alertaPost['restantes']} sillas restantes).";
+        }
+
         return redirect()->route('reservaciones.asignar')
-            ->with('success', 'Mesa asignada correctamente.');
+            ->with('success', $mensaje);
     }
 
     // MAI— Verificar disponibilidad
@@ -127,14 +143,37 @@ class ReservacionController extends Controller
     }
 
     // MAI - Validar cupo total
+    /**
+     * @brief Muestra el estado de ocupación del restaurante con alertas de capacidad.
+     *
+     * Calcula la ocupación actual de mesas y sillas, utilizando el límite
+     * configurado por el Administrador para determinar si se debe mostrar
+     * una alerta visual de proximidad al límite de capacidad.
+     *
+     * @return View  Vista reservaciones.cupo con datos de ocupación y alertas.
+     */
     public function cupo(): View
     {
-        $cupoTotal  = Mesa::capacidadTotal();
+        // Obtenemos la configuración del restaurante para usar el límite
+        // efectivo de sillas (manual o automático) y los datos de alerta
+        $config     = ConfiguracionRestaurante::actual();
+        $cupoTotal  = $config->limiteEfectivo();
         $numMesas   = Mesa::count();
         $ocupadas   = (int) Horario::hoy()->distinct('mesa_id')->count('mesa_id'); // Contamos el número de mesas que tienen horarios asignados para hoy utilizando una consulta que filtra los horarios por la fecha actual y cuenta el número de mesas distintas que están ocupadas
         
         $libres     = $numMesas - $ocupadas;
         $porcentaje = $numMesas > 0 ? round($ocupadas / $numMesas * 100) : 0; // Calculamos el porcentaje de mesas ocupadas para mostrar una métrica visual del nivel de ocupación del restaurante en el panel de capacidad total del Maitre
+
+        // Calculamos la ocupación en sillas (no mesas) para verificar el
+        // umbral de alerta configurado por el Administrador
+        $sillasOcupadas = (int) DB::table('horarios')
+            ->join('reservaciones', 'horarios.reservacion_id', '=', 'reservaciones.id_reservacion')
+            ->whereRaw("horarios.inicio BETWEEN NOW() - INTERVAL '2 hours' AND NOW() + INTERVAL '2 hours'")
+            ->sum('reservaciones.cantidad');
+
+        // Verificamos si la ocupación actual supera el umbral de alerta
+        // para mostrar alertas visuales prominentes en la vista de cupo
+        $alerta = $config->verificarAlerta($sillasOcupadas);
 
         $reservasHoy = Horario::hoy() // Cargamos los horarios de hoy con la información de la reservación y el cliente asociado para mostrar un listado detallado de las reservaciones que están ocupando mesas en el día actual, lo que permite al Maitre tener una visión completa de las reservaciones en curso y los clientes que están siendo atendidos en ese momento
             ->with('mesa', 'reservacion.cliente')
@@ -142,7 +181,8 @@ class ReservacionController extends Controller
             ->get();
 
         return view('reservaciones.cupo', compact(
-            'cupoTotal', 'numMesas', 'ocupadas', 'libres', 'porcentaje', 'reservasHoy'
+            'cupoTotal', 'numMesas', 'ocupadas', 'libres', 'porcentaje',
+            'reservasHoy', 'alerta', 'sillasOcupadas', 'config'
         ));
     }
 
